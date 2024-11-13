@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktdsuniversity.edu.hello_spring.bbs.dao.ReplyDao">
+	<resultMap type="com.ktdsuniversity.edu.hello_spring.bbs.vo.ReplyVO" id="replyVOMap" autoMapping="true">
+		<id column="REPLY_ID" property="replyId" />
+		<association property="memberVO" javaType="com.ktdsuniversity.edu.hello_spring.member.vo.MemberVO" autoMapping="true">
+			<id column="EMAIL" property="email" />
+		</association>
+	</resultMap>
+	
+	<select id="selectAllReplies" parameterType="_int" resultMap="replyVOMap" >
+		 SELECT LEVEL
+	  		  , r.REPLY_ID
+	  		  , r.BOARD_ID
+	  		  , r.EMAIL
+	  		  , r.CONTENT
+	  		  , r.CRT_DT
+	  		  , r.MDFY_DT
+	  		  , r.RECOMMEND_CNT
+	  		  , r.PARENT_REPLY_ID
+	  		  , m.NAME
+   		   FROM REPLIES r
+  		  INNER JOIN BOARD b
+     		 ON r.BOARD_ID = b.ID
+  		  INNER JOIN MEMBERS m
+     		 ON r.EMAIL = m.EMAIL
+  		  START WITH r.PARENT_REPLY_ID = 0
+    		AND r.BOARD_ID = #{_parameter}
+		CONNECT BY PRIOR r.REPLY_ID = r.PARENT_REPLY_ID
+	</select>
+	
+	<select id="selectOneReply" parameterType="_int" resultMap="replyVOMap">
+		 SELECT r.REPLY_ID
+	  		  , r.BOARD_ID
+	  		  , r.EMAIL
+	  		  , r.CONTENT
+	  		  , r.CRT_DT
+	  		  , r.MDFY_DT
+	  		  , r.RECOMMEND_CNT
+	  		  , r.PARENT_REPLY_ID
+	  		  , m.NAME
+   		   FROM REPLIES r
+  		  INNER JOIN BOARD b
+     		 ON r.BOARD_ID = b.ID
+  		  INNER JOIN MEMBERS m
+     		 ON r.EMAIL = m.EMAIL
+     	  WHERE r.REPLY_ID = #{_parameter}
+	</select>
+	
+	<insert id="insertNewReply" parameterType="com.ktdsuniversity.edu.hello_spring.bbs.vo.WriteReplyVO">
+		INSERT INTO REPLIES (
+   		   REPLY_ID
+ 		 , BOARD_ID
+ 		 , EMAIL
+ 		 , CONTENT
+ 		 , CRT_DT
+ 		 , MDFY_DT
+ 		 , RECOMMEND_CNT
+ 		 , PARENT_REPLY_ID) 
+		VALUES (
+   		   SEQ_REPLIES_PK.NEXTVAL
+ 		 , #{boardId}
+ 		 , #{email}
+ 		 , #{content}
+ 		 , SYSDATE
+ 		 , SYSDATE
+ 		 , 0
+ 		 , #{parentReplyId} )
+	</insert>
+	
+	<delete id="deleteOneReply" parameterType="com.ktdsuniversity.edu.hello_spring.bbs.vo.DeleteReplyVO">
+		DELETE
+  		  FROM REPLIES
+ 		 WHERE REPLY_ID = #{replyId}
+	</delete>
+	
+	<update id="recommendOneReply" parameterType="_int" >
+		UPDATE REPLIES
+   		   SET RECOMMEND_CNT = RECOMMEND_CNT + 1
+ 		 WHERE REPLY_ID = #{_parameter}
+	</update>
+	
+	<update id="updateOneReply" parameterType="com.ktdsuniversity.edu.hello_spring.bbs.vo.ModifyReplyVO">
+		UPDATE REPLIES
+   		   SET CONTENT = #{content}
+     		 , MDFY_DT = SYSDATE
+ 		 WHERE REPLY_ID = #{replyId}
+	</update>
+</mapper>
